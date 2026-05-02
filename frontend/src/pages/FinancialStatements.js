@@ -210,7 +210,7 @@ const FinancialStatements = () => {
                 Income Statement
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                For the period from {filters.startDate?.toLocaleDateString() || 'Beginning'} to {filters.endDate?.toLocaleDateString()}
+                Excellence Coaching Hub - For the period from {filters.startDate?.toLocaleDateString() || 'Beginning'} to {filters.endDate?.toLocaleDateString()}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 1 }}>
@@ -320,7 +320,7 @@ const FinancialStatements = () => {
                 Balance Sheet
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                As of {filters.endDate?.toLocaleDateString()}
+                Excellence Coaching Hub - As of {filters.endDate?.toLocaleDateString()}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 1 }}>
@@ -478,7 +478,7 @@ const FinancialStatements = () => {
                 Cash Flow Statement
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                For the period from {filters.startDate?.toLocaleDateString() || 'Beginning'} to {filters.endDate?.toLocaleDateString()}
+                Excellence Coaching Hub - For the period from {filters.startDate?.toLocaleDateString() || 'Beginning'} to {filters.endDate?.toLocaleDateString()}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 1 }}>

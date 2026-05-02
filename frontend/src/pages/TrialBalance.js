@@ -160,6 +160,9 @@ const TrialBalance = () => {
           <Typography variant="h4">
             Trial Balance
           </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Excellence Coaching Hub
+          </Typography>
         </Box>
 
         {error && (

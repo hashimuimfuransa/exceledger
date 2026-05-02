@@ -509,7 +509,7 @@ const IncomeStatementReport = React.forwardRef(({ data }, ref) => {
             Income Statement
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            For the period from {new Date(data.period.startDate).toLocaleDateString()} to {new Date(data.period.endDate).toLocaleDateString()}
+            Excellence Coaching Hub - For the period from {new Date(data.period.startDate).toLocaleDateString()} to {new Date(data.period.endDate).toLocaleDateString()}
           </Typography>
         </Box>
         <Chip 
@@ -649,7 +649,7 @@ const BalanceSheetReport = React.forwardRef(({ data }, ref) => {
             Balance Sheet
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            As of {new Date(data.asOfDate).toLocaleDateString()}
+            Excellence Coaching Hub - As of {new Date(data.asOfDate).toLocaleDateString()}
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -871,7 +871,7 @@ const CashFlowReport = React.forwardRef(({ data }, ref) => {
             Cash Flow Statement
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            For the period from {new Date(data.period.startDate).toLocaleDateString()} to {new Date(data.period.endDate).toLocaleDateString()}
+            Excellence Coaching Hub - For the period from {new Date(data.period?.startDate).toLocaleDateString()} to {new Date(data.period?.endDate).toLocaleDateString()}
           </Typography>
         </Box>
         <Chip 
@@ -1068,7 +1068,7 @@ const TrialBalanceReport = React.forwardRef(({ data }, ref) => {
             Trial Balance
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            As of {new Date(data.asOfDate).toLocaleDateString()}
+            Excellence Coaching Hub - As of {new Date(data.asOfDate).toLocaleDateString()}
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
