@@ -23,6 +23,7 @@ import PostedTransactions from './pages/PostedTransactions';
 import AdjustedEntries from './pages/AdjustedEntries';
 import YearEndClosing from './pages/YearEndClosing';
 import SettingsPage from './pages/Settings';
+import UserManagement from './pages/UserManagement';
 import Layout from './components/Layout';
 
 // Protected Route Component
@@ -37,13 +38,25 @@ const PublicRoute = ({ children }) => {
   return !isAuthenticated ? children : <Navigate to="/dashboard" />;
 };
 
+// Admin Route Component
+const AdminRoute = ({ children }) => {
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+  if (!user || user.role !== 'admin') {
+    return <Navigate to="/dashboard" />;
+  }
+  return <Layout>{children}</Layout>;
+};
+
 function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <AuthProvider>
-          <Router>
+          <Router future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
             <Routes>
               <Route
                 path="/login"
@@ -171,6 +184,14 @@ function App() {
                   <ProtectedRoute>
                     <SettingsPage />
                   </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/users"
+                element={
+                  <AdminRoute>
+                    <UserManagement />
+                  </AdminRoute>
                 }
               />
               <Route path="/" element={<Navigate to="/dashboard" />} />

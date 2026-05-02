@@ -12,6 +12,7 @@ const trialBalanceRoutes = require('./routes/trialBalanceRoutes');
 const financialStatementsRoutes = require('./routes/financialStatementsRoutes');
 const accountingCycleRoutes = require('./routes/accountingCycleRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use('/api/trial-balance', trialBalanceRoutes);
 app.use('/api/reports', financialStatementsRoutes);
 app.use('/api/accounting-cycle', accountingCycleRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/users', userRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

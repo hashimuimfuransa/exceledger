@@ -86,6 +86,16 @@ export const settingsAPI = {
   updateSettings: (data) => axios.put('/settings', data),
 };
 
+// Users API
+export const usersAPI = {
+  getAll: (params) => axios.get('/users', { params }),
+  getById: (id) => axios.get(`/users/${id}`),
+  create: (data) => axios.post('/users', data),
+  update: (id, data) => axios.put(`/users/${id}`, data),
+  delete: (id) => axios.delete(`/users/${id}`),
+  toggleStatus: (id) => axios.patch(`/users/${id}/toggle-status`),
+};
+
 // Utility function to handle API errors
 export const handleAPIError = (error) => {
   if (error.response) {

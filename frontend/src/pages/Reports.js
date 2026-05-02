@@ -837,20 +837,60 @@ const BalanceSheetReport = React.forwardRef(({ data }, ref) => {
               </Box>
             </CardContent>
             <CardContent sx={{ pt: 0 }}>
-              {data.assets?.details?.map((item, index) => (
-                <Box key={`asset-${index}`} sx={{ display: 'flex', justifyContent: 'space-between', py: 1.5 }}>
-                  <Box>
-                    <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>
-                      {item.accountName}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {item.accountCode}
-                    </Typography>
+              {data.assets?.categories && Object.entries(data.assets.categories).map(([categoryName, category], categoryIndex) => (
+                category.accounts.length > 0 && (
+                  <Box key={`asset-category-${categoryIndex}`} sx={{ mb: 3 }}>
+                    {/* Category Header */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'success.dark', flexGrow: 1 }}>
+                        {categoryName}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                        {formatCurrency(category.subtotal)}
+                      </Typography>
+                    </Box>
+                    
+                    {/* Category Accounts */}
+                    {category.accounts.map((account, accountIndex) => (
+                      <Box key={`asset-${categoryIndex}-${accountIndex}`} sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        py: 1,
+                        pl: 2,
+                        '&:hover': { bgcolor: 'success.50' }
+                      }}>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>
+                            {account.accountName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {account.accountCode}
+                          </Typography>
+                        </Box>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>
+                          {formatCurrency(account.amount)}
+                        </Typography>
+                      </Box>
+                    ))}
+                    
+                    {/* Category Subtotal */}
+                    <Box sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      py: 1, 
+                      mt: 1,
+                      borderTop: '1px dashed',
+                      borderColor: 'success.light'
+                    }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.dark' }}>
+                        {categoryName} Subtotal
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 700, color: 'success.dark' }}>
+                        {formatCurrency(category.subtotal)}
+                      </Typography>
+                    </Box>
                   </Box>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>
-                    {formatCurrency(item.amount)}
-                  </Typography>
-                </Box>
+                )
               ))}
               
               <Divider sx={{ my: 2, borderColor: 'success.light' }} />
@@ -882,20 +922,60 @@ const BalanceSheetReport = React.forwardRef(({ data }, ref) => {
               </Box>
             </CardContent>
             <CardContent sx={{ pt: 0 }}>
-              {data.liabilities?.details?.map((item, index) => (
-                <Box key={`liability-${index}`} sx={{ display: 'flex', justifyContent: 'space-between', py: 1.5 }}>
-                  <Box>
-                    <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>
-                      {item.accountName}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {item.accountCode}
-                    </Typography>
+              {data.liabilities?.categories && Object.entries(data.liabilities.categories).map(([categoryName, category], categoryIndex) => (
+                category.accounts.length > 0 && (
+                  <Box key={`liability-category-${categoryIndex}`} sx={{ mb: 3 }}>
+                    {/* Category Header */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'error.dark', flexGrow: 1 }}>
+                        {categoryName}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                        {formatCurrency(category.subtotal)}
+                      </Typography>
+                    </Box>
+                    
+                    {/* Category Accounts */}
+                    {category.accounts.map((account, accountIndex) => (
+                      <Box key={`liability-${categoryIndex}-${accountIndex}`} sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        py: 1,
+                        pl: 2,
+                        '&:hover': { bgcolor: 'error.50' }
+                      }}>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>
+                            {account.accountName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {account.accountCode}
+                          </Typography>
+                        </Box>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'error.main' }}>
+                          {formatCurrency(account.amount)}
+                        </Typography>
+                      </Box>
+                    ))}
+                    
+                    {/* Category Subtotal */}
+                    <Box sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      py: 1, 
+                      mt: 1,
+                      borderTop: '1px dashed',
+                      borderColor: 'error.light'
+                    }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: 'error.dark' }}>
+                        {categoryName} Subtotal
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 700, color: 'error.dark' }}>
+                        {formatCurrency(category.subtotal)}
+                      </Typography>
+                    </Box>
                   </Box>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: 'error.main' }}>
-                    {formatCurrency(item.amount)}
-                  </Typography>
-                </Box>
+                )
               ))}
               
               <Divider sx={{ my: 2, borderColor: 'error.light' }} />
@@ -927,20 +1007,60 @@ const BalanceSheetReport = React.forwardRef(({ data }, ref) => {
               </Box>
             </CardContent>
             <CardContent sx={{ pt: 0 }}>
-              {data.equity?.details?.map((item, index) => (
-                <Box key={`equity-${index}`} sx={{ display: 'flex', justifyContent: 'space-between', py: 1.5 }}>
-                  <Box>
-                    <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>
-                      {item.accountName}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {item.accountCode}
-                    </Typography>
+              {data.equity?.categories && Object.entries(data.equity.categories).map(([categoryName, category], categoryIndex) => (
+                category.accounts.length > 0 && (
+                  <Box key={`equity-category-${categoryIndex}`} sx={{ mb: 3 }}>
+                    {/* Category Header */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'primary.dark', flexGrow: 1 }}>
+                        {categoryName}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                        {formatCurrency(category.subtotal)}
+                      </Typography>
+                    </Box>
+                    
+                    {/* Category Accounts */}
+                    {category.accounts.map((account, accountIndex) => (
+                      <Box key={`equity-${categoryIndex}-${accountIndex}`} sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        py: 1,
+                        pl: 2,
+                        '&:hover': { bgcolor: 'primary.50' }
+                      }}>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>
+                            {account.accountName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {account.accountCode}
+                          </Typography>
+                        </Box>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                          {formatCurrency(account.amount)}
+                        </Typography>
+                      </Box>
+                    ))}
+                    
+                    {/* Category Subtotal */}
+                    <Box sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      py: 1, 
+                      mt: 1,
+                      borderTop: '1px dashed',
+                      borderColor: 'primary.light'
+                    }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.dark' }}>
+                        {categoryName} Subtotal
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 700, color: 'primary.dark' }}>
+                        {formatCurrency(category.subtotal)}
+                      </Typography>
+                    </Box>
                   </Box>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                    {formatCurrency(item.amount)}
-                  </Typography>
-                </Box>
+                )
               ))}
               
               <Divider sx={{ my: 2, borderColor: 'primary.light' }} />

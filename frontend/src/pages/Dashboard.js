@@ -12,6 +12,7 @@ import {
   useTheme,
   useMediaQuery,
   Container,
+  Paper,
 } from '@mui/material';
 import {
   TrendingUp,
@@ -85,8 +86,31 @@ const Dashboard = () => {
       maxWidth={false}
       sx={{ 
         p: isMobile ? 2 : 3,
-        background: `linear-gradient(135deg, ${theme.palette.background.default} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`,
+        background: `
+          radial-gradient(ellipse at top left, ${alpha(theme.palette.primary.main, 0.15)} 0%, transparent 50%),
+          radial-gradient(ellipse at bottom right, ${alpha(theme.palette.secondary.main, 0.1)} 0%, transparent 50%),
+          linear-gradient(135deg, ${theme.palette.grey[50]} 0%, ${theme.palette.grey[100]} 100%)
+        `,
         minHeight: '100vh',
+        position: 'relative',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `
+            repeating-linear-gradient(
+              45deg,
+              transparent,
+              transparent 35px,
+              ${alpha(theme.palette.primary.main, 0.02)} 35px,
+              ${alpha(theme.palette.primary.main, 0.02)} 70px
+            )
+          `,
+          pointerEvents: 'none',
+        },
       }}
     >
       <Box sx={{ 
@@ -96,77 +120,93 @@ const Dashboard = () => {
         mb: 4,
         flexDirection: isMobile ? 'column' : 'row',
         gap: isMobile ? 2 : 0,
+        position: 'relative',
+        zIndex: 1,
       }}>
         <Box>
           <Typography 
             variant={isMobile ? 'h4' : 'h3'} 
             component="h1"
             sx={{
-              fontWeight: 800,
-              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${alpha(theme.palette.primary.main, 0.7)})`,
+              fontWeight: 900,
+              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
               mb: 1,
+              letterSpacing: '-0.02em',
+              textShadow: `0 2px 4px ${alpha(theme.palette.primary.main, 0.1)}`,
             }}
           >
             Dashboard
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, opacity: 0.8 }}>
             Welcome back, {user?.fullName}
           </Typography>
         </Box>
-        <Box sx={{
-          p: 2,
-          borderRadius: 3,
-          background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.primary.main, 0.05)})`,
-          border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-        }}>
-          <Typography variant="caption" color="text.secondary">
+        <Paper 
+          elevation={0}
+          sx={{
+            p: 2,
+            borderRadius: 3,
+            background: `
+              linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.9)}, ${alpha(theme.palette.background.paper, 0.7)})
+            `,
+            backdropFilter: 'blur(10px)',
+            border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+            boxShadow: `
+              0 8px 32px ${alpha(theme.palette.primary.main, 0.1)},
+              inset 0 1px 0 ${alpha(theme.palette.common.white, 0.6)}
+            `,
+          }}
+        >
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
             {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </Typography>
-        </Box>
+        </Paper>
       </Box>
 
       {summary ? (
-        <ResponsiveGrid sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title="Total Revenue"
-              value={summary.totalRevenue || 0}
-              icon={TrendingUp}
-              color="success"
-              trend={15.3}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title="Total Expenses"
-              value={summary.totalExpenses || 0}
-              icon={TrendingDown}
-              color="error"
-              trend={-8.2}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title="Net Profit"
-              value={summary.netIncome || 0}
-              icon={AccountBalance}
-              color="primary"
-              trend={23.7}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title="Cash on Hand"
-              value={summary.totalCash || 0}
-              icon={Receipt}
-              color="warning"
-              trend={5.1}
-            />
-          </Grid>
-        </ResponsiveGrid>
+        <Box sx={{ mb: 4 }}>
+          <ResponsiveGrid>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatCard
+                title="Total Revenue"
+                value={summary.totalRevenue || 0}
+                icon={TrendingUp}
+                color="success"
+                trend={15.3}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatCard
+                title="Total Expenses"
+                value={summary.totalExpenses || 0}
+                icon={TrendingDown}
+                color="error"
+                trend={-8.2}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatCard
+                title="Net Profit"
+                value={summary.netIncome || 0}
+                icon={AccountBalance}
+                color="primary"
+                trend={23.7}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatCard
+                title="Cash on Hand"
+                value={summary.totalCash || 0}
+                icon={Receipt}
+                color="warning"
+                trend={5.1}
+              />
+            </Grid>
+          </ResponsiveGrid>
+        </Box>
       ) : null}
 
       <ResponsiveGrid>
