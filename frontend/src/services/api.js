@@ -64,6 +64,28 @@ export const reportsAPI = {
   getSummary: (params) => axios.get('/reports/summary', { params }),
 };
 
+// Accounting Cycle API
+export const accountingCycleAPI = {
+  // Adjusted Entries
+  createAdjustedEntry: (data) => axios.post('/accounting-cycle/adjusted-entries', data),
+  getAdjustedEntries: (params) => axios.get('/accounting-cycle/adjusted-entries', { params }),
+  approveAdjustedEntry: (entryId) => axios.post(`/accounting-cycle/adjusted-entries/${entryId}/approve`),
+  createReversingEntry: (data) => axios.post('/accounting-cycle/reversing-entries', data),
+  
+  // Year-End Closing
+  performYearEndClosing: (data) => axios.post('/accounting-cycle/year-end-closing', data),
+  getClosingEntries: (params) => axios.get('/accounting-cycle/closing-entries', { params }),
+  
+  // New Year Opening
+  openNewYear: (data) => axios.post('/accounting-cycle/open-new-year', data),
+};
+
+// Settings API
+export const settingsAPI = {
+  getSettings: () => axios.get('/settings'),
+  updateSettings: (data) => axios.put('/settings', data),
+};
+
 // Utility function to handle API errors
 export const handleAPIError = (error) => {
   if (error.response) {

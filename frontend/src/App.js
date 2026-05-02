@@ -20,6 +20,9 @@ import AccountLedger from './pages/AccountLedger';
 import TrialBalance from './pages/TrialBalance';
 import FinancialStatements from './pages/FinancialStatements';
 import PostedTransactions from './pages/PostedTransactions';
+import AdjustedEntries from './pages/AdjustedEntries';
+import YearEndClosing from './pages/YearEndClosing';
+import SettingsPage from './pages/Settings';
 import Layout from './components/Layout';
 
 // Protected Route Component
@@ -143,6 +146,30 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <FinancialStatements />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/accounting/adjusted-entries"
+                element={
+                  <ProtectedRoute>
+                    <AdjustedEntries />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/accounting/year-end-closing"
+                element={
+                  <ProtectedRoute>
+                    <YearEndClosing />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <SettingsPage />
                   </ProtectedRoute>
                 }
               />

@@ -25,6 +25,9 @@ import {
   AccountBalance,
   Person,
   Logout,
+  PostAdd,
+  Lock,
+  Settings,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -37,6 +40,9 @@ const menuItems = [
   { text: 'Posted Transactions', icon: AccountBalance, path: '/transactions/posted' },
   { text: 'Add Transaction', icon: AccountBalance, path: '/transactions/new' },
   { text: 'Reports', icon: Assessment, path: '/reports' },
+  { text: 'Adjusted Entries', icon: PostAdd, path: '/accounting/adjusted-entries' },
+  { text: 'Year-End Closing', icon: Lock, path: '/accounting/year-end-closing' },
+  { text: 'Settings', icon: Settings, path: '/settings' },
 ];
 
 const Layout = ({ children }) => {

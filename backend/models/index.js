@@ -4,6 +4,8 @@ const JournalEntry = require('./JournalEntry');
 const JournalLine = require('./JournalLine');
 const TransactionTemplate = require('./TransactionTemplate');
 const Ledger = require('./Ledger');
+const AccountingPeriod = require('./AccountingPeriod');
+const AuditTrail = require('./AuditTrail');
 
 module.exports = {
   User,
@@ -11,5 +13,7 @@ module.exports = {
   JournalEntry,
   JournalLine,
   TransactionTemplate,
-  Ledger
+  Ledger,
+  AccountingPeriod,
+  AuditTrail
 };

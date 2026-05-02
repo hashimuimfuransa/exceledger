@@ -604,7 +604,7 @@ const IncomeStatementReport = React.forwardRef(({ data }, ref) => {
         </Grid>
       </Grid>
 
-      {/* Net Income Summary */}
+      {/* Profit Metrics Summary */}
       <Card sx={{ 
         mt: 3,
         bgcolor: 'background.paper',
@@ -613,26 +613,174 @@ const IncomeStatementReport = React.forwardRef(({ data }, ref) => {
         boxShadow: 3
       }}>
         <CardContent sx={{ bgcolor: 'primary.50', py: 2 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.dark', mb: 1 }}>
-                NET INCOME
-              </Typography>
-              {data.grossMargin !== undefined && (
+          <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.dark', mb: 3 }}>
+            PROFIT METRICS
+          </Typography>
+          <Grid container spacing={3}>
+            {data.profitMetrics?.grossProfit !== undefined && (
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Gross Profit
+                  </Typography>
+                  <Typography variant="h6" color="success.main">
+                    {formatCurrency(data.profitMetrics.grossProfit)}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {data.profitMetrics.grossMargin?.toFixed(1)}%
+                  </Typography>
+                </Box>
+              </Grid>
+            )}
+            {data.profitMetrics?.operatingProfit !== undefined && (
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Operating Profit
+                  </Typography>
+                  <Typography variant="h6" color="primary.main">
+                    {formatCurrency(data.profitMetrics.operatingProfit)}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Before Interest & Tax
+                  </Typography>
+                </Box>
+              </Grid>
+            )}
+            {data.profitMetrics?.pbit !== undefined && (
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    PBIT
+                  </Typography>
+                  <Typography variant="h6" color="info.main">
+                    {formatCurrency(data.profitMetrics.pbit)}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Profit Before Int. & Tax
+                  </Typography>
+                </Box>
+              </Grid>
+            )}
+            {data.profitMetrics?.pbt !== undefined && (
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    PBT
+                  </Typography>
+                  <Typography variant="h6" color="warning.main">
+                    {formatCurrency(data.profitMetrics.pbt)}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Profit Before Tax
+                  </Typography>
+                </Box>
+              </Grid>
+            )}
+            <Grid item xs={12} sm={6} md={3}>
+              <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="body2" color="text.secondary">
-                  Gross Margin: {data.grossMargin.toFixed(1)}%
+                  NET INCOME
                 </Typography>
-              )}
-            </Box>
-            <Typography variant="h3" sx={{ 
-              fontWeight: 700,
-              color: data.netIncome >= 0 ? 'success.main' : 'error.main'
-            }}>
-              {formatCurrency(data.netIncome)}
-            </Typography>
-          </Box>
+                <Typography variant="h6" sx={{ 
+                  fontWeight: 700,
+                  color: data.netIncome >= 0 ? 'success.main' : 'error.main'
+                }}>
+                  {formatCurrency(data.netIncome)}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {data.profitMetrics?.netMargin?.toFixed(1)}%
+                </Typography>
+              </Box>
+            </Grid>
+          </Grid>
         </CardContent>
       </Card>
+
+      {/* Interest and Tax Breakdown */}
+      {(data.expenses?.interestExpenses?.total > 0 || data.expenses?.taxExpenses?.total > 0) && (
+        <Card sx={{ 
+          mt: 3,
+          bgcolor: 'background.paper',
+          border: '1px solid',
+          borderColor: 'grey.300',
+          boxShadow: 2
+        }}>
+          <CardContent sx={{ bgcolor: 'grey.50', py: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, color: 'text.secondary' }}>
+              Interest & Tax Breakdown
+            </Typography>
+            <Grid container spacing={3}>
+              {data.expenses?.interestExpenses?.total > 0 && (
+                <Grid item xs={12} md={6}>
+                  <Card sx={{ bgcolor: 'warning.50', border: '1px solid', borderColor: 'warning.light' }}>
+                    <CardContent sx={{ py: 2 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'warning.dark', mb: 2 }}>
+                        Interest Expenses
+                      </Typography>
+                      {data.expenses.interestExpenses.details?.map((item, index) => (
+                        <Box key={`interest-${index}`} sx={{ display: 'flex', justifyContent: 'space-between', py: 1 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {item.accountName}
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: 'warning.main' }}>
+                            {formatCurrency(item.amount)}
+                          </Typography>
+                        </Box>
+                      ))}
+                      <Divider sx={{ my: 2, borderColor: 'warning.light' }} />
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Total Interest</Typography>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'warning.main' }}>
+                          {formatCurrency(data.expenses.interestExpenses.total)}
+                        </Typography>
+                      </Box>
+                      {data.expenses.interestExpenses.interestRate > 0 && (
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                          Applied Interest Rate: {data.expenses.interestExpenses.interestRate.toFixed(1)}%
+                        </Typography>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              )}
+              {data.expenses?.taxExpenses?.total > 0 && (
+                <Grid item xs={12} md={6}>
+                  <Card sx={{ bgcolor: 'error.50', border: '1px solid', borderColor: 'error.light' }}>
+                    <CardContent sx={{ py: 2 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'error.dark', mb: 2 }}>
+                        Tax Expenses
+                      </Typography>
+                      {data.expenses.taxExpenses.details?.map((item, index) => (
+                        <Box key={`tax-${index}`} sx={{ display: 'flex', justifyContent: 'space-between', py: 1 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {item.accountName}
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: 'error.main' }}>
+                            {formatCurrency(item.amount)}
+                          </Typography>
+                        </Box>
+                      ))}
+                      <Divider sx={{ my: 2, borderColor: 'error.light' }} />
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Total Tax</Typography>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'error.main' }}>
+                          {formatCurrency(data.expenses.taxExpenses.total)}
+                        </Typography>
+                      </Box>
+                      {data.expenses.taxExpenses.taxRate > 0 && (
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                          Applied Tax Rate: {data.expenses.taxExpenses.taxRate.toFixed(1)}%
+                        </Typography>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              )}
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
     </Box>
   );
 });
@@ -655,7 +803,7 @@ const BalanceSheetReport = React.forwardRef(({ data }, ref) => {
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Chip 
             icon={<AccountBalance />} 
-            label={`Total Assets: ${formatCurrency(data.totalAssets)}`}
+            label={`Total Assets: ${formatCurrency(data.assets?.total)}`}
             color="primary"
             sx={{ fontWeight: 600 }}
           />
@@ -709,7 +857,7 @@ const BalanceSheetReport = React.forwardRef(({ data }, ref) => {
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary' }}>TOTAL ASSETS</Typography>
                 <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'success.main' }}>
-                  {formatCurrency(data.totalAssets)}
+                  {formatCurrency(data.assets?.total)}
                 </Typography>
               </Box>
             </CardContent>
@@ -754,7 +902,7 @@ const BalanceSheetReport = React.forwardRef(({ data }, ref) => {
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary' }}>TOTAL LIABILITIES</Typography>
                 <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'error.main' }}>
-                  {formatCurrency(data.totalLiabilities)}
+                  {formatCurrency(data.liabilities?.total)}
                 </Typography>
               </Box>
             </CardContent>
@@ -799,7 +947,7 @@ const BalanceSheetReport = React.forwardRef(({ data }, ref) => {
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary' }}>TOTAL EQUITY</Typography>
                 <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                  {formatCurrency(data.totalEquity)}
+                  {formatCurrency(data.equity?.total)}
                 </Typography>
               </Box>
             </CardContent>

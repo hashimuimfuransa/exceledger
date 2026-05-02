@@ -10,6 +10,8 @@ const journalRoutes = require('./routes/journalRoutes');
 const ledgerRoutes = require('./routes/ledgerRoutes');
 const trialBalanceRoutes = require('./routes/trialBalanceRoutes');
 const financialStatementsRoutes = require('./routes/financialStatementsRoutes');
+const accountingCycleRoutes = require('./routes/accountingCycleRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
 
 const app = express();
 
@@ -33,6 +35,8 @@ app.use('/api/ledger', ledgerRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/trial-balance', trialBalanceRoutes);
 app.use('/api/reports', financialStatementsRoutes);
+app.use('/api/accounting-cycle', accountingCycleRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

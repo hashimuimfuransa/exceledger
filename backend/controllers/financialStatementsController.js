@@ -1,4 +1,5 @@
 const { Ledger, Account } = require('../models');
+const Settings = require('../models/Settings');
 
 const getIncomeStatement = async (req, res) => {
   try {
@@ -88,6 +89,139 @@ const getIncomeStatement = async (req, res) => {
 
     const netIncome = totalRevenue - totalExpenses;
 
+    // Calculate interest expenses (get from accounts with 'interest' in name or specific interest expense accounts)
+    let interestExpenses = 0;
+    const interestExpenseDetails = [];
+    
+    // Get interest expense accounts
+    const interestAccounts = await Account.find({ 
+      accountType: 'expense', 
+      isActive: true,
+      $or: [
+        { accountName: /interest/i },
+        { accountCode: /^68/ } // Typical interest expense account codes
+      ]
+    });
+
+    for (const account of interestAccounts) {
+      const interestAmount = await Ledger.aggregate([
+        {
+          $match: {
+            account: account._id,
+            entryDate: { $gte: start, $lte: end }
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: '$debitAmount' }
+          }
+        }
+      ]);
+
+      const amount = interestAmount.length > 0 ? interestAmount[0].total : 0;
+      if (amount > 0) {
+        interestExpenseDetails.push({
+          accountCode: account.accountCode,
+          accountName: account.accountName,
+          amount
+        });
+        interestExpenses += amount;
+      }
+    }
+
+    // Get settings for tax and interest rates first
+    const settings = await Settings.getSettings();
+    console.log('Retrieved settings in financial statements:', settings);
+    const configuredInterestRate = settings.interestRate !== undefined ? settings.interestRate : 0.15; // Default to 15% if not set
+
+    // Calculate PBIT (Profit Before Interest and Tax)
+    // PBIT is the same as Gross Profit (Revenue - Total Expenses) because it's BEFORE interest and tax deductions
+    const grossProfit = totalRevenue - totalExpenses;
+    const pbit = grossProfit;
+
+    // Calculate interest expenses (separate from PBIT calculation)
+    // Always calculate based on interest rate from settings if no actual interest transactions exist
+    console.log('Interest calculation debug:', {
+      actualInterestExpenses: interestExpenses,
+      configuredInterestRate: configuredInterestRate,
+      grossProfit: grossProfit,
+      pbit: pbit
+    });
+    
+    if (interestExpenses === 0 && pbit > 0) {
+      // Calculate interest expense based on configured rate
+      const calculatedInterestExpenses = grossProfit * configuredInterestRate;
+      console.log('Calculated interest expenses:', calculatedInterestExpenses);
+      interestExpenses = calculatedInterestExpenses;
+      
+      // Add to interest expense details for reporting
+      interestExpenseDetails.push({
+        accountCode: 'CONFIG',
+        accountName: 'Configured Interest Rate',
+        amount: calculatedInterestExpenses
+      });
+    }
+
+    // Calculate tax expenses (get from tax expense accounts or apply tax rate)
+    let taxExpenses = 0;
+    const taxExpenseDetails = [];
+    let taxRate = 0; // Default tax rate (can be configured)
+    
+    // Get tax expense accounts
+    const taxAccounts = await Account.find({ 
+      accountType: 'expense', 
+      isActive: true,
+      $or: [
+        { accountName: /tax/i },
+        { accountCode: /^69/ } // Typical tax expense account codes
+      ]
+    });
+
+    for (const account of taxAccounts) {
+      const taxAmount = await Ledger.aggregate([
+        {
+          $match: {
+            account: account._id,
+            entryDate: { $gte: start, $lte: end }
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: '$debitAmount' }
+          }
+        }
+      ]);
+
+      const amount = taxAmount.length > 0 ? taxAmount[0].total : 0;
+      if (amount > 0) {
+        taxExpenseDetails.push({
+          accountCode: account.accountCode,
+          accountName: account.accountName,
+          amount
+        });
+        taxExpenses += amount;
+      }
+    }
+
+    // If no tax expenses found, calculate based on tax rate from settings
+    if (taxExpenses === 0 && pbit > 0) {
+      taxRate = settings.taxRate || 0.30; // Default to 30% if not set
+      taxExpenses = pbit * taxRate;
+    }
+
+    // Calculate PBT (Profit Before Tax) = PBIT - Interest Expenses
+    const pbt = pbit - interestExpenses;
+    console.log('PBT calculation debug:', {
+      pbit: pbit,
+      interestExpenses: interestExpenses,
+      calculatedPbt: pbt
+    });
+
+    // Calculate Net Income after tax
+    const netIncomeAfterTax = pbt - taxExpenses;
+
     res.json({
       period: { startDate: start, endDate: end },
       revenue: {
@@ -96,9 +230,32 @@ const getIncomeStatement = async (req, res) => {
       },
       expenses: {
         details: expenseDetails,
-        total: totalExpenses
+        total: totalExpenses,
+        interestExpenses: {
+          details: interestExpenseDetails,
+          total: interestExpenses,
+          interestRate: (settings?.interestRate || 0.15) * 100
+        },
+        taxExpenses: {
+          details: taxExpenseDetails,
+          total: taxExpenses,
+          taxRate: taxRate * 100
+        }
       },
-      netIncome,
+      profitMetrics: {
+        operatingProfit: grossProfit,
+        grossProfit: grossProfit,
+        grossMargin: totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0,
+        pbit: pbit,
+        pbt: pbt,
+        interestExpenses: interestExpenses,
+        interestRate: (settings?.interestRate || 0.15) * 100,
+        taxExpenses: taxExpenses,
+        taxRate: taxRate * 100,
+        netIncome: netIncomeAfterTax,
+        netMargin: totalRevenue > 0 ? (netIncomeAfterTax / totalRevenue) * 100 : 0
+      },
+      netIncome: netIncomeAfterTax,
       grossMargin: totalRevenue > 0 ? ((totalRevenue - totalExpenses) / totalRevenue) * 100 : 0
     });
   } catch (error) {
@@ -111,6 +268,8 @@ const getBalanceSheet = async (req, res) => {
   try {
     const { asOfDate } = req.query;
     const asOf = asOfDate ? new Date(asOfDate) : new Date();
+
+    console.log('Balance Sheet Debug - As of date:', asOf);
 
     // Get all accounts by type
     const assetAccounts = await Account.find({ 
@@ -128,6 +287,12 @@ const getBalanceSheet = async (req, res) => {
       isActive: true 
     }).sort({ accountCode: 1 });
 
+    console.log('Balance Sheet Debug - Found accounts:', {
+      assets: assetAccounts.length,
+      liabilities: liabilityAccounts.length,
+      equity: equityAccounts.length
+    });
+
     let totalAssets = 0;
     let totalLiabilities = 0;
     let totalEquity = 0;
@@ -143,9 +308,17 @@ const getBalanceSheet = async (req, res) => {
         .sort({ entryDate: -1 });
 
       const balance = lastLedgerEntry ? lastLedgerEntry.runningBalance : 0;
-      const amount = balance > 0 ? balance : 0;
+      // For assets, negative running balance means positive asset (credit balance reduces asset)
+      const amount = balance < 0 ? Math.abs(balance) : 0;
 
-      if (amount > 0) {
+      console.log(`Asset Debug - ${account.accountCode} ${account.accountName}:`, {
+        balance,
+        amount,
+        hasLedgerEntry: !!lastLedgerEntry
+      });
+
+      // Only include assets with non-zero balances
+      if (amount !== 0) {
         assetDetails.push({
           accountCode: account.accountCode,
           accountName: account.accountName,
@@ -155,6 +328,8 @@ const getBalanceSheet = async (req, res) => {
       }
     }
 
+    console.log('Balance Sheet Debug - Asset totals:', { totalAssets, assetCount: assetDetails.length });
+
     // Calculate liabilities
     for (const account of liabilityAccounts) {
       const filter = { account: account._id, entryDate: { $lte: asOf } };
@@ -162,9 +337,17 @@ const getBalanceSheet = async (req, res) => {
         .sort({ entryDate: -1 });
 
       const balance = lastLedgerEntry ? lastLedgerEntry.runningBalance : 0;
-      const amount = balance > 0 ? balance : 0;
+      // For liabilities, normal balance is credit, so negative running balance means positive liability
+      const amount = balance < 0 ? Math.abs(balance) : 0;
 
-      if (amount > 0) {
+      console.log(`Liability Debug - ${account.accountCode} ${account.accountName}:`, {
+        balance,
+        amount,
+        hasLedgerEntry: !!lastLedgerEntry
+      });
+
+      // Only include liabilities with non-zero balances
+      if (amount !== 0) {
         liabilityDetails.push({
           accountCode: account.accountCode,
           accountName: account.accountName,
@@ -174,6 +357,8 @@ const getBalanceSheet = async (req, res) => {
       }
     }
 
+    console.log('Balance Sheet Debug - Liability totals:', { totalLiabilities, liabilityCount: liabilityDetails.length });
+
     // Calculate equity
     for (const account of equityAccounts) {
       const filter = { account: account._id, entryDate: { $lte: asOf } };
@@ -181,9 +366,17 @@ const getBalanceSheet = async (req, res) => {
         .sort({ entryDate: -1 });
 
       const balance = lastLedgerEntry ? lastLedgerEntry.runningBalance : 0;
+      // For equity, positive running balance means positive equity (credit increases equity)
       const amount = balance > 0 ? balance : 0;
 
-      if (amount > 0) {
+      console.log(`Equity Debug - ${account.accountCode} ${account.accountName}:`, {
+        balance,
+        amount,
+        hasLedgerEntry: !!lastLedgerEntry
+      });
+
+      // Only include equity with non-zero balances
+      if (amount !== 0) {
         equityDetails.push({
           accountCode: account.accountCode,
           accountName: account.accountName,
@@ -193,9 +386,20 @@ const getBalanceSheet = async (req, res) => {
       }
     }
 
+    console.log('Balance Sheet Debug - Equity totals:', { totalEquity, equityCount: equityDetails.length });
+
     // Validate balance sheet equation
     const isBalanced = Math.abs(totalAssets - (totalLiabilities + totalEquity)) < 0.01;
     const difference = Math.abs(totalAssets - (totalLiabilities + totalEquity));
+
+    console.log('Balance Sheet Debug - Final Summary:', {
+      totalAssets,
+      totalLiabilities,
+      totalEquity,
+      isBalanced,
+      difference,
+      totalLiabilitiesAndEquity: totalLiabilities + totalEquity
+    });
 
     res.json({
       asOfDate: asOf,

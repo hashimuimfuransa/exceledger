@@ -24,6 +24,54 @@ const journalLineSchema = new mongoose.Schema({
     type: Number,
     default: 0,
     min: 0
+  },
+  // Enhanced fields for adjusting entries
+  referenceTransaction: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'JournalLine',
+    default: null
+  },
+  adjustmentDetails: {
+    accrualType: {
+      type: String,
+      enum: ['revenue', 'expense'],
+      default: null
+    },
+    accrualPeriod: {
+      type: Number,
+      default: null
+    },
+    accrualRate: {
+      type: Number,
+      default: null
+    },
+    deferralType: {
+      type: String,
+      enum: ['expense', 'revenue'],
+      default: null
+    },
+    deferralPeriod: {
+      type: Number,
+      default: null
+    },
+    totalAmount: {
+      type: Number,
+      default: null
+    },
+    correctingAmount: {
+      type: Number,
+      default: null
+    },
+    correctingDirection: {
+      type: String,
+      enum: ['debit', 'credit'],
+      default: null
+    },
+    adjustmentMethod: {
+      type: String,
+      enum: ['zero_balance', 'proportional', 'fixed'],
+      default: null
+    }
   }
 }, {
   timestamps: true
