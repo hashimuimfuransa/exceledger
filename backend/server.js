@@ -13,6 +13,7 @@ const financialStatementsRoutes = require('./routes/financialStatementsRoutes');
 const accountingCycleRoutes = require('./routes/accountingCycleRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const userRoutes = require('./routes/userRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.use('/api/reports', financialStatementsRoutes);
 app.use('/api/accounting-cycle', accountingCycleRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

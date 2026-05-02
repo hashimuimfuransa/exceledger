@@ -24,6 +24,7 @@ import AdjustedEntries from './pages/AdjustedEntries';
 import YearEndClosing from './pages/YearEndClosing';
 import SettingsPage from './pages/Settings';
 import UserManagement from './pages/UserManagement';
+import AdminTools from './pages/AdminTools';
 import Layout from './components/Layout';
 
 // Protected Route Component
@@ -191,6 +192,14 @@ function App() {
                 element={
                   <AdminRoute>
                     <UserManagement />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/tools"
+                element={
+                  <AdminRoute>
+                    <AdminTools />
                   </AdminRoute>
                 }
               />

@@ -39,10 +39,9 @@ const updateAccountValidation = [
     .withMessage('Normal balance must be debit or credit')
 ];
 
-// Routes - All account management routes require admin role
+// Routes - Account creation requires authentication but not admin role for now
 router.post('/', 
   auth, 
-  roleAuth('admin'), 
   createAccountValidation, 
   accountController.createAccount
 );

@@ -3,8 +3,12 @@ const { validationResult } = require('express-validator');
 
 const createAccount = async (req, res) => {
   try {
+    console.log('=== CREATE ACCOUNT DEBUG ===');
+    console.log('Request body:', req.body);
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 

@@ -61,11 +61,16 @@ const AddAccount = () => {
       setLoading(true);
       setError('');
       
+      console.log('Sending account data:', formData);
       await accountsAPI.create(formData);
       navigate('/accounts');
     } catch (err) {
-      setError('Failed to create account');
+      const errorMessage = err.response?.data?.message || err.response?.data?.errors?.[0]?.msg || 'Failed to create account';
+      setError(errorMessage);
       console.error('Create account error:', err);
+      if (err.response?.data) {
+        console.error('Error response:', err.response.data);
+      }
     } finally {
       setLoading(false);
     }

@@ -32,6 +32,7 @@ import {
   Lock,
   Settings,
   Group,
+  Security,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -52,6 +53,7 @@ const getMenuItems = (user) => {
   // Add admin-only menu items
   if (user && user.role === 'admin') {
     items.push({ text: 'User Management', icon: Group, path: '/admin/users' });
+    items.push({ text: 'Admin Tools', icon: Security, path: '/admin/tools' });
   }
   
   items.push({ text: 'Settings', icon: Settings, path: '/settings' });

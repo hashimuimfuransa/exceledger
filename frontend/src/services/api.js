@@ -96,6 +96,12 @@ export const usersAPI = {
   toggleStatus: (id) => axios.patch(`/users/${id}/toggle-status`),
 };
 
+// Admin API
+export const adminAPI = {
+  getSystemStats: () => axios.get('/admin/stats'),
+  deleteAllData: () => axios.delete('/admin/delete-all'),
+};
+
 // Utility function to handle API errors
 export const handleAPIError = (error) => {
   if (error.response) {
