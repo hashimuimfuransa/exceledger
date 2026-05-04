@@ -23,7 +23,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { templatesAPI, journalAPI, accountsAPI } from '../services/api';
-import { Add, Remove, AccountBalance } from '@mui/icons-material';
+import { Add, Remove, AccountBalance, Upload, AttachFile } from '@mui/icons-material';
 
 const AddTransaction = () => {
   const theme = useTheme();
@@ -40,6 +40,7 @@ const AddTransaction = () => {
     referenceNumber: '',
     status: 'draft',
   });
+  const [paymentProof, setPaymentProof] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -139,6 +140,25 @@ const AddTransaction = () => {
     });
   };
 
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+      if (!allowedTypes.includes(file.type)) {
+        setError('Invalid file type. Only images and PDFs are allowed.');
+        return;
+      }
+      // Validate file size (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setError('File size exceeds 10MB limit.');
+        return;
+      }
+      setPaymentProof(file);
+      setError('');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -164,20 +184,39 @@ const AddTransaction = () => {
       setLoading(true);
       setError('');
 
-      const payload = {
-        entryDate: transactionData.entryDate.toISOString().split('T')[0],
-        description: transactionData.description,
-        referenceNumber: transactionData.referenceNumber,
-        status: transactionData.status,
-        lines: validLines.map(line => ({
-          account: line.accountId,
-          debitAmount: line.lineType === 'debit' ? parseFloat(line.amount) : 0,
-          creditAmount: line.lineType === 'credit' ? parseFloat(line.amount) : 0,
-          description: line.description,
-        })),
-      };
+      // Use FormData if there's a file, otherwise use regular JSON
+      if (paymentProof) {
+        const formData = new FormData();
+        formData.append('entryDate', transactionData.entryDate.toISOString().split('T')[0]);
+        formData.append('description', transactionData.description);
+        formData.append('referenceNumber', transactionData.referenceNumber);
+        formData.append('status', transactionData.status);
+        formData.append('paymentProof', paymentProof);
+        
+        validLines.forEach((line, index) => {
+          formData.append(`lines[${index}][account]`, line.accountId);
+          formData.append(`lines[${index}][debitAmount]`, line.lineType === 'debit' ? parseFloat(line.amount) : 0);
+          formData.append(`lines[${index}][creditAmount]`, line.lineType === 'credit' ? parseFloat(line.amount) : 0);
+          formData.append(`lines[${index}][description]`, line.description);
+        });
 
-      const response = await journalAPI.create(payload);
+        await journalAPI.createWithFile(formData);
+      } else {
+        const payload = {
+          entryDate: transactionData.entryDate.toISOString().split('T')[0],
+          description: transactionData.description,
+          referenceNumber: transactionData.referenceNumber,
+          status: transactionData.status,
+          lines: validLines.map(line => ({
+            account: line.accountId,
+            debitAmount: line.lineType === 'debit' ? parseFloat(line.amount) : 0,
+            creditAmount: line.lineType === 'credit' ? parseFloat(line.amount) : 0,
+            description: line.description,
+          })),
+        };
+
+        await journalAPI.create(payload);
+      }
       
       setSuccess('Transaction created successfully!');
       setJournalLines([
@@ -190,6 +229,7 @@ const AddTransaction = () => {
         referenceNumber: '',
         status: 'draft',
       });
+      setPaymentProof(null);
 
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create transaction');
@@ -269,6 +309,55 @@ const AddTransaction = () => {
                           <MenuItem value="posted">Posted</MenuItem>
                         </Select>
                       </FormControl>
+                    </Grid>
+
+                    <Grid item xs={12}>
+                      <Box
+                        sx={{
+                          p: 3,
+                          border: '2px dashed',
+                          borderColor: paymentProof ? 'success.main' : alpha(theme.palette.divider, 0.5),
+                          borderRadius: 2,
+                          textAlign: 'center',
+                          bgcolor: paymentProof ? alpha(theme.palette.success.main, 0.05) : alpha(theme.palette.background.default, 0.5),
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            borderColor: paymentProof ? 'success.main' : 'primary.main',
+                            bgcolor: paymentProof ? alpha(theme.palette.success.main, 0.1) : alpha(theme.palette.primary.main, 0.05),
+                          },
+                        }}
+                        onClick={() => document.getElementById('payment-proof-input').click()}
+                      >
+                        <input
+                          id="payment-proof-input"
+                          type="file"
+                          accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,application/pdf"
+                          onChange={handleFileChange}
+                          style={{ display: 'none' }}
+                        />
+                        {paymentProof ? (
+                          <Box>
+                            <AttachFile color="success" sx={{ fontSize: 48, mb: 1 }} />
+                            <Typography variant="body1" sx={{ fontWeight: 600, color: 'success.main' }}>
+                              {paymentProof.name}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {(paymentProof.size / 1024 / 1024).toFixed(2)} MB
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <Box>
+                            <Upload sx={{ fontSize: 48, mb: 1, color: 'text.secondary' }} />
+                            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                              Upload Payment Proof
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              Click to select a file (Images or PDF, max 10MB)
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
                     </Grid>
 
                     <Grid item xs={12}>

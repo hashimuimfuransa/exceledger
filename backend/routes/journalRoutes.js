@@ -4,6 +4,7 @@ const { body } = require('express-validator');
 const journalController = require('../controllers/journalController');
 const auth = require('../middleware/auth');
 const roleAuth = require('../middleware/roleAuth');
+const { uploadPaymentProof, uploadToS3 } = require('../middleware/upload');
 
 // Validation rules
 const createJournalEntryValidation = [
@@ -41,6 +42,8 @@ const updateJournalEntryValidation = [
 router.post('/', 
   auth, 
   roleAuth('admin'), 
+  uploadPaymentProof,
+  uploadToS3,
   createJournalEntryValidation, 
   journalController.createJournalEntry
 );
@@ -60,6 +63,8 @@ router.get('/:id',
 router.put('/:id', 
   auth, 
   roleAuth('admin'), 
+  uploadPaymentProof,
+  uploadToS3,
   updateJournalEntryValidation, 
   journalController.updateJournalEntry
 );

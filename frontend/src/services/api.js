@@ -34,7 +34,17 @@ export const journalAPI = {
   getAll: (params) => axios.get('/journal', { params }),
   getById: (id) => axios.get(`/journal/${id}`),
   create: (data) => axios.post('/journal', data),
+  createWithFile: (formData) => axios.post('/journal', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }),
   update: (id, data) => axios.put(`/journal/${id}`, data),
+  updateWithFile: (id, formData) => axios.put(`/journal/${id}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }),
   delete: (id) => axios.delete(`/journal/${id}`),
   postEntry: (id) => axios.post(`/journal/${id}/post`),
 };

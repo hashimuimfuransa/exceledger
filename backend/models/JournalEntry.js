@@ -115,6 +115,17 @@ const journalEntrySchema = new mongoose.Schema({
   reversed: {
     type: Boolean,
     default: false
+  },
+  // Payment proof attachment
+  paymentProof: {
+    type: String,
+    trim: true,
+    default: null
+  },
+  paymentProofFileName: {
+    type: String,
+    trim: true,
+    default: null
   }
 }, {
   timestamps: true

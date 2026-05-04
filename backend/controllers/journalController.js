@@ -1,6 +1,7 @@
 const { JournalEntry, JournalLine, Account, TransactionTemplate } = require('../models');
 const { postToLedger } = require('./ledgerController');
 const { validationResult } = require('express-validator');
+const s3Service = require('../services/s3Service');
 
 // Generate unique entry number
 const generateEntryNumber = async () => {
@@ -57,8 +58,8 @@ const createJournalEntry = async (req, res) => {
         }
 
         const amount = templateLine.isAmountFixed 
-          ? templateLine.fixedAmount 
-          : req.body.amount || 0;
+          ? parseFloat(templateLine.fixedAmount) || 0
+          : parseFloat(req.body.amount) || 0;
 
         if (amount === 0) {
           await session.abortTransaction();
@@ -68,15 +69,18 @@ const createJournalEntry = async (req, res) => {
           });
         }
 
+        const debitAmount = templateLine.lineType === 'debit' ? amount : 0;
+        const creditAmount = templateLine.lineType === 'credit' ? amount : 0;
+
         lineData.push({
           account: templateLine.account,
           description: templateLine.description || description,
-          debitAmount: templateLine.lineType === 'debit' ? amount : 0,
-          creditAmount: templateLine.lineType === 'credit' ? amount : 0
+          debitAmount,
+          creditAmount
         });
 
-        totalDebit += templateLine.lineType === 'debit' ? amount : 0;
-        totalCredit += templateLine.lineType === 'credit' ? amount : 0;
+        totalDebit += debitAmount;
+        totalCredit += creditAmount;
       }
     } else {
       // Manual lines
@@ -96,15 +100,18 @@ const createJournalEntry = async (req, res) => {
           });
         }
 
+        const debitAmount = parseFloat(line.debitAmount) || 0;
+        const creditAmount = parseFloat(line.creditAmount) || 0;
+
         lineData.push({
           account: line.account,
           description: line.description || description,
-          debitAmount: line.debitAmount || 0,
-          creditAmount: line.creditAmount || 0
+          debitAmount,
+          creditAmount
         });
 
-        totalDebit += line.debitAmount || 0;
-        totalCredit += line.creditAmount || 0;
+        totalDebit += debitAmount;
+        totalCredit += creditAmount;
       }
     }
 
@@ -134,7 +141,9 @@ const createJournalEntry = async (req, res) => {
       referenceNumber,
       templateUsed: templateId || null,
       createdBy: req.user._id,
-      postedAt: status === 'posted' ? new Date() : null
+      postedAt: status === 'posted' ? new Date() : null,
+      paymentProof: req.paymentProofUrl || null,
+      paymentProofFileName: req.paymentProofFileName || null
     }], { session });
 
     // Now create journal lines with the journalEntry reference
@@ -277,6 +286,23 @@ const updateJournalEntry = async (req, res) => {
     if (description !== undefined) entry.description = description;
     if (referenceNumber !== undefined) entry.referenceNumber = referenceNumber;
     
+    // Handle payment proof update
+    if (req.paymentProofUrl) {
+      // Delete old file if exists
+      if (entry.paymentProof) {
+        const oldKey = s3Service.extractKeyFromUrl(entry.paymentProof);
+        if (oldKey) {
+          try {
+            await s3Service.deleteFile(oldKey);
+          } catch (error) {
+            console.error('Error deleting old payment proof:', error);
+          }
+        }
+      }
+      entry.paymentProof = req.paymentProofUrl;
+      entry.paymentProofFileName = req.paymentProofFileName;
+    }
+    
     if (status !== undefined && status === 'posted') {
       entry.status = 'posted';
       entry.postedAt = new Date();
@@ -319,6 +345,18 @@ const deleteJournalEntry = async (req, res) => {
       return res.status(400).json({ 
         message: 'Cannot delete posted journal entry' 
       });
+    }
+
+    // Delete payment proof from S3 if exists
+    if (entry.paymentProof) {
+      const key = s3Service.extractKeyFromUrl(entry.paymentProof);
+      if (key) {
+        try {
+          await s3Service.deleteFile(key);
+        } catch (error) {
+          console.error('Error deleting payment proof from S3:', error);
+        }
+      }
     }
 
     // Delete associated journal lines

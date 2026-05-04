@@ -18,15 +18,17 @@ import {
   Divider,
   Grid,
 } from '@mui/material';
-import { 
-  ArrowBack, 
-  Edit, 
-  Delete, 
+import {
+  ArrowBack,
+  Edit,
+  Delete,
   Send,
   AccountBalance,
   Assessment,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  AttachFile,
+  Download
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { journalAPI } from '../services/api';
@@ -312,10 +314,37 @@ const TransactionDetail = () => {
                 </Table>
               </TableContainer>
 
+              {transaction.paymentProof && (
+                <Box sx={{ mt: 3, p: 3, bgcolor: 'grey.50', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <AttachFile color="primary" sx={{ fontSize: 24 }} />
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      Payment Proof
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      File: {transaction.paymentProofFileName || 'payment_proof'}
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      startIcon={<Download />}
+                      href={transaction.paymentProof}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{ textTransform: 'none' }}
+                    >
+                      View/Download
+                    </Button>
+                  </Box>
+                </Box>
+              )}
+
               <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
+                <Typography
+                  variant="body2"
+                  sx={{
                     fontWeight: 600,
                     color: debitTotal === creditTotal ? 'success.main' : 'error.main'
                   }}
