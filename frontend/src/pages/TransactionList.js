@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -21,7 +21,12 @@ import {
   IconButton,
   Menu,
   MenuItem,
+  Grid,
+  FormControl,
+  InputLabel,
+  Select,
 } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import {
   Search,
   FilterList,
@@ -30,8 +35,11 @@ import {
   Edit,
   Delete,
   Send,
+  Clear,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { journalAPI } from '../services/api';
 
 const TransactionList = () => {
@@ -42,9 +50,22 @@ const TransactionList = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [entryTypeFilter, setEntryTypeFilter] = useState('');
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+
+  // Debounce search term to prevent excessive API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -58,6 +79,10 @@ const TransactionList = () => {
         };
 
         if (statusFilter) params.status = statusFilter;
+        if (entryTypeFilter) params.entryType = entryTypeFilter;
+        if (startDate) params.startDate = startDate.toISOString().split('T')[0];
+        if (endDate) params.endDate = endDate.toISOString().split('T')[0];
+        if (debouncedSearchTerm) params.search = debouncedSearchTerm;
 
         const response = await journalAPI.getAll(params);
         setTransactions(response.data.entries || []);
@@ -72,7 +97,7 @@ const TransactionList = () => {
     };
 
     fetchTransactions();
-  }, [page, statusFilter]);
+  }, [page, statusFilter, entryTypeFilter, startDate, endDate, debouncedSearchTerm]);
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
@@ -86,6 +111,16 @@ const TransactionList = () => {
   const handleMenuClose = () => {
     setAnchorEl(null);
     setSelectedTransaction(null);
+  };
+
+  const handleClearFilters = () => {
+    setStatusFilter('');
+    setEntryTypeFilter('');
+    setStartDate(null);
+    setEndDate(null);
+    setSearchTerm('');
+    setDebouncedSearchTerm('');
+    setPage(1);
   };
 
   const handleView = () => {
@@ -117,8 +152,8 @@ const TransactionList = () => {
 
     try {
       await journalAPI.postEntry(selectedTransaction._id);
-      setTransactions(transactions.map(t => 
-        t._id === selectedTransaction._id 
+      setTransactions(transactions.map(t =>
+        t._id === selectedTransaction._id
           ? { ...t, status: 'posted' }
           : t
       ));
@@ -127,11 +162,6 @@ const TransactionList = () => {
       setError('Failed to post transaction');
     }
   };
-
-  const filteredTransactions = transactions.filter(transaction =>
-    transaction.entryNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    transaction.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -155,49 +185,114 @@ const TransactionList = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">
-          Transactions
-        </Typography>
-        <Button
-          variant="contained"
-          onClick={() => navigate('/transactions/new')}
-        >
-          Add Transaction
-        </Button>
-      </Box>
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <Box sx={{ p: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h4">
+            Transactions
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => navigate('/transactions/new')}
+          >
+            Add Transaction
+          </Button>
+        </Box>
 
-      {error ? (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>
-          {error}
-        </Alert>
-      ) : null}
+        {error ? (
+          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>
+            {error}
+          </Alert>
+        ) : null}
+
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+              Filters
+            </Typography>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} sm={6} md={2}>
+                <DatePicker
+                  label="Start Date"
+                  value={startDate}
+                  onChange={setStartDate}
+                  slots={{ textField: TextField }}
+                  slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <DatePicker
+                  label="End Date"
+                  value={endDate}
+                  onChange={setEndDate}
+                  slots={{ textField: TextField }}
+                  slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    label="Status"
+                  >
+                    <MenuItem value="">All</MenuItem>
+                    <MenuItem value="draft">Draft</MenuItem>
+                    <MenuItem value="posted">Posted</MenuItem>
+                    <MenuItem value="voided">Voided</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Entry Type</InputLabel>
+                  <Select
+                    value={entryTypeFilter}
+                    onChange={(e) => setEntryTypeFilter(e.target.value)}
+                    label="Entry Type"
+                  >
+                    <MenuItem value="">All</MenuItem>
+                    <MenuItem value="normal">Normal</MenuItem>
+                    <MenuItem value="adjusting">Adjusting</MenuItem>
+                    <MenuItem value="reversing">Reversing</MenuItem>
+                    <MenuItem value="closing">Closing</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Entry #, description..."
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <Button
+                  variant="outlined"
+                  startIcon={<Clear />}
+                  onClick={handleClearFilters}
+                  fullWidth
+                >
+                  Clear Filters
+                </Button>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
 
       <Card>
         <CardContent>
-          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-            <TextField
-              placeholder="Search transactions..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ minWidth: 300 }}
-            />
-            <Button
-              variant="outlined"
-              startIcon={<FilterList />}
-              onClick={(e) => setAnchorEl(e.currentTarget)}
-            >
-              Filter
-            </Button>
-          </Box>
 
           <TableContainer component={Paper}>
             <Table>
@@ -213,7 +308,7 @@ const TransactionList = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredTransactions.map((transaction) => (
+                {transactions.map((transaction) => (
                   <TableRow key={transaction._id}>
                     <TableCell>{transaction.entryNumber}</TableCell>
                     <TableCell>
@@ -288,18 +383,8 @@ const TransactionList = () => {
           </MenuItem>
         ) : null}
       </Menu>
-
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl) && !selectedTransaction}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={() => setStatusFilter('')}>All Status</MenuItem>
-        <MenuItem onClick={() => setStatusFilter('draft')}>Draft</MenuItem>
-        <MenuItem onClick={() => setStatusFilter('posted')}>Posted</MenuItem>
-        <MenuItem onClick={() => setStatusFilter('voided')}>Voided</MenuItem>
-      </Menu>
-    </Box>
+      </Box>
+    </LocalizationProvider>
   );
 };
 
